@@ -11,13 +11,15 @@ class Book:
     author: str
     description: str
     rating: int
+    published_date: int
 
-    def __init__(self, id, title, author, description, rating):
+    def __init__(self, id, title, author, description, rating, published_date):
         self.id = id
         self.title = title
         self.author = author
         self.description = description
         self.rating = rating
+        self.published_date = published_date
 
 
 class BookRequest(BaseModel):
@@ -26,6 +28,7 @@ class BookRequest(BaseModel):
     author: str = Field(min_length=1)
     description: str = Field(max_length=100)
     rating: int = Field(gt=0, le=5)
+    published_date: int = Field(gt=1999, lt=2031)
 
     model_config = {
         "json_schema_extra": {
@@ -35,19 +38,20 @@ class BookRequest(BaseModel):
                     "author": "The full name of the author",
                     "description": "A brief summary of the book",
                     "category": "The category of the book E.g. novel",
-                    "rating": 3
+                    "rating": 3,
+                    "published_date": 2020
                 }
         }
     }
 
 
 BOOKS = [
-    Book(1, "Computer Science", "John Doe", "A book about computer science", 5),
-    Book(2, "Cooking", "Mary Smith", "A book about cooking", 4),
-    Book(3, "Data Science", "Jane Doe", "A book about data science", 3),
-    Book(4, "Python", "John Doe", "A book about Python programming", 1),
-    Book(5, "Algorithms", "Jane Doe", "A book about algorithms", 2),
-    Book(6, "Django", "author 1", "A book about Django", 5),
+    Book(1, "Computer Science", "John Doe", "A book about computer science", 5, 2021),
+    Book(2, "Cooking", "Mary Smith", "A book about cooking", 4, 2000),
+    Book(3, "Data Science", "Jane Doe", "A book about data science", 3, 2019),
+    Book(4, "Python", "John Doe", "A book about Python programming", 1, 2021),
+    Book(5, "Algorithms", "Jane Doe", "A book about algorithms", 2, 2020),
+    Book(6, "Django", "author 1", "A book about Django", 5, 2020),
 ]
 
 
@@ -69,6 +73,15 @@ async def read_books_by_rating(book_rating: int):
     books_to_return = []
     for book in BOOKS:
         if book.rating == book_rating:
+            books_to_return.append(book)
+    return books_to_return
+
+
+@app.get("/books/published/")
+async def read_books_by_published_date(published_date: int):
+    books_to_return = []
+    for book in BOOKS:
+        if book.published_date == published_date:
             books_to_return.append(book)
     return books_to_return
 
