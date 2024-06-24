@@ -29,14 +29,14 @@ class BookRequest(BaseModel):
 
     model_config = {
         "json_schema_extra": {
-            "example": [
+            "example":
                 {
                     "title": "The name of the book",
                     "author": "The full name of the author",
                     "description": "A brief summary of the book",
                     "category": "The category of the book E.g. novel",
+                    "rating": 3
                 }
-            ]
         }
     }
 
@@ -56,6 +56,23 @@ async def read_all_books():
     return BOOKS
 
 
+@app.get("/books/{book_id}")
+async def read_book(book_id: int):
+    for book in BOOKS:
+        if book.id == book_id:
+            return book
+    return {"error": "Book not found"}
+
+
+@app.get("/books/")
+async def read_books_by_rating(book_rating: int):
+    books_to_return = []
+    for book in BOOKS:
+        if book.rating == book_rating:
+            books_to_return.append(book)
+    return books_to_return
+
+
 @app.post("/create_book")
 async def create_book(book_request: BookRequest):
     new_book = Book(**book_request.dict())
@@ -65,3 +82,21 @@ async def create_book(book_request: BookRequest):
 def find_book_id(book: Book):
     book.id = 1 if len(BOOKS) == 0 else BOOKS[-1].id + 1
     return book
+
+
+@app.put("/books/update_book")
+async def update_book(updated_book: BookRequest):
+    for i in range(len(BOOKS)):
+        if BOOKS[i].id == updated_book.id:
+            BOOKS[i] = updated_book
+            return {"message": "Book updated successfully"}
+    return {"error": "Book not found"}
+
+
+@app.delete("/books/{book_id}")
+async def delete_book(book_id: int):
+    for i in range(len(BOOKS)):
+        if BOOKS[i].id == book_id:
+            BOOKS.pop(i)
+            return {"message": "Book deleted successfully"}
+    return {"error": "Book not found"}
