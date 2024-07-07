@@ -41,7 +41,7 @@ async def get_user(user: user_dependency, db: db_dependency):
     return db.query(Users).filter(Users.id == user.get("id")).first()
 
 
-@router.put("/", status_code=status.HTTP_204_NO_CONTENT)
+@router.put("/password", status_code=status.HTTP_204_NO_CONTENT)
 async def change_password(user: user_dependency, db: db_dependency, user_verification: UserVerification):
     """사용자 비밀번호를 변경합니다."""
     if user is None:
