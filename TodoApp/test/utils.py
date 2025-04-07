@@ -56,6 +56,33 @@ def test_todo():
 
 
 @pytest.fixture
+def test_todos():
+    todo1 = Todos(
+        title="Learn to code",
+        description="Test Description",
+        priority=5,
+        complete=False,
+        owner_id=1
+    )
+    todo2 = Todos(
+        title="Learn to code",
+        description="Test Description",
+        priority=5,
+        complete=True,
+        owner_id=1
+    )
+
+    db = TestingSessionLocal()
+    db.add(todo1)
+    db.add(todo2)
+    db.commit()
+    yield [todo1, todo2]
+    with engine.connect() as connection:
+        connection.execute(text("DELETE FROM todos;"))
+        connection.commit()
+
+
+@pytest.fixture
 def test_user():
     user = Users(
         username="testuser",

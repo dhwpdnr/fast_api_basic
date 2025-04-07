@@ -1,7 +1,7 @@
-from fastapi import APIRouter, Depends, HTTPException, Path
+from fastapi import APIRouter, Depends, HTTPException, Path, Query
 from TodoApp.models import Todos
 from TodoApp.database import SessionLocal
-from typing import Annotated
+from typing import Annotated, Optional
 from sqlalchemy.orm import Session
 from starlette import status
 from pydantic import BaseModel, Field
@@ -30,12 +30,20 @@ class TodoRequest(BaseModel):
 
 
 @router.get("/")
-async def read_all(user: user_dependency, db: db_dependency):
+async def read_all(
+        user: user_dependency,
+        db: db_dependency,
+        complete: Optional[bool] = Query(None, description="완료 여부 필터 (true 또는 false)"),
+):
     """전체 todo 목록을 반환합니다."""
     if user is None:
         raise HTTPException(status_code=401, detail="Authentication Failed")
+    query = db.query(Todos).filter(Todos.owner_id == user.get("id"))
 
-    return db.query(Todos).filter(Todos.owner_id == user.get("id")).all()
+    if complete is not None:
+        query = query.filter(Todos.complete == complete)
+
+    return query.all()
 
 
 @router.get("/todo/{todo_id}", status_code=status.HTTP_200_OK)

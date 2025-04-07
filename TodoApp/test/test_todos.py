@@ -12,6 +12,27 @@ def test_read_all_authenticated(test_todo):
     assert response.json() == [
         {"id": 1, "title": "Learn to code", "description": "Test Description", "priority": 5, "complete": False,
          "owner_id": 1}]
+    # test_todo 값 사용
+    assert response.json() == [
+        {"id": test_todo.id, "title": test_todo.title, "description": test_todo.description,
+         "priority": test_todo.priority, "complete": test_todo.complete, "owner_id": test_todo.owner_id},
+    ]
+
+
+def test_read_all_authenticated_with_complete(test_todos):
+    response = client.get("/?complete=True")
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json() == [
+        {"id": 2, "title": "Learn to code", "description": "Test Description", "priority": 5, "complete": True,
+         "owner_id": 1}
+    ]
+
+    response = client.get("/?complete=False")
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json() == [
+        {"id": 1, "title": "Learn to code", "description": "Test Description", "priority": 5, "complete": False,
+         "owner_id": 1}
+    ]
 
 
 def test_read_one_authenticated(test_todo):
