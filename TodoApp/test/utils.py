@@ -5,7 +5,7 @@ from ..database import Base
 from fastapi.testclient import TestClient
 import pytest
 from ..main import app
-from ..models import Todos, Users
+from ..models import Todos, Users, Category
 from ..routers.auth import bcrypt_context
 
 SQLALCHEMY_DATABASE_URL = 'sqlite:///./testdb.db'
@@ -37,13 +37,28 @@ client = TestClient(app)
 
 
 @pytest.fixture
-def test_todo():
+def test_category():
+    category = Category(name="Test Category")
+
+    db = TestingSessionLocal()
+    db.add(category)
+    db.commit()
+    db.refresh(category)
+    yield category
+    with engine.connect() as connection:
+        connection.execute(text("DELETE FROM categories;"))
+        connection.commit()
+
+
+@pytest.fixture
+def test_todo(test_category):
     todo = Todos(
         title="Learn to code",
         description="Test Description",
         priority=5,
         complete=False,
-        owner_id=1
+        owner_id=1,
+        category_id=test_category.id
     )
 
     db = TestingSessionLocal()
@@ -56,20 +71,22 @@ def test_todo():
 
 
 @pytest.fixture
-def test_todos():
+def test_todos(test_category):
     todo1 = Todos(
         title="Learn to code",
         description="Test Description",
         priority=5,
         complete=False,
-        owner_id=1
+        owner_id=1,
+        category_id=test_category.id
     )
     todo2 = Todos(
         title="Learn to code",
         description="Test Description",
         priority=5,
         complete=True,
-        owner_id=1
+        owner_id=1,
+        category_id=test_category.id
     )
 
     db = TestingSessionLocal()

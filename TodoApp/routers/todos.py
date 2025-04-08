@@ -27,6 +27,7 @@ class TodoRequest(BaseModel):
     description: str = Field(min_length=3, max_length=100)
     priority: int = Field(gt=0, lt=6)
     complete: bool
+    category_id: Optional[int] = None
 
 
 @router.get("/")
@@ -34,6 +35,7 @@ async def read_all(
         user: user_dependency,
         db: db_dependency,
         complete: Optional[bool] = Query(None, description="완료 여부 필터 (true 또는 false)"),
+        category_id: Optional[int] = Query(None, description="카테고리 ID 필터")
 ):
     """전체 todo 목록을 반환합니다."""
     if user is None:
@@ -42,6 +44,8 @@ async def read_all(
 
     if complete is not None:
         query = query.filter(Todos.complete == complete)
+    if category_id is not None:
+        query = query.filter(Todos.category == category_id)
 
     return query.all()
 

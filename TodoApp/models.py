@@ -1,4 +1,4 @@
-from .database import Base
+from TodoApp.database import Base
 from sqlalchemy import Column, Integer, String, Boolean, ForeignKey
 
 
@@ -25,3 +25,10 @@ class Todos(Base):
     priority = Column(Integer)
     complete = Column(Boolean, default=False)
     owner_id = Column(Integer, ForeignKey("users.id"))
+    category_id = Column(Integer, ForeignKey("categories.id"))
+
+
+class Category(Base):
+    __tablename__ = "categories"
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String, unique=True)
