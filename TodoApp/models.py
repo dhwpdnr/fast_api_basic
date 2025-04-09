@@ -1,5 +1,5 @@
 from TodoApp.database import Base
-from sqlalchemy import Column, Integer, String, Boolean, ForeignKey
+from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, DateTime
 
 
 class Users(Base):
@@ -26,6 +26,7 @@ class Todos(Base):
     complete = Column(Boolean, default=False)
     owner_id = Column(Integer, ForeignKey("users.id"))
     category_id = Column(Integer, ForeignKey("categories.id"))
+    completed_at = Column(DateTime, nullable=True)
 
 
 class Category(Base):

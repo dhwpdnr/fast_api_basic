@@ -5,6 +5,7 @@ from typing import Annotated, Optional
 from sqlalchemy.orm import Session
 from starlette import status
 from pydantic import BaseModel, Field
+from datetime import datetime
 from .auth import get_current_user
 
 router = APIRouter()
@@ -32,10 +33,10 @@ class TodoRequest(BaseModel):
 
 @router.get("/")
 async def read_all(
-        user: user_dependency,
-        db: db_dependency,
-        complete: Optional[bool] = Query(None, description="완료 여부 필터 (true 또는 false)"),
-        category_id: Optional[int] = Query(None, description="카테고리 ID 필터")
+    user: user_dependency,
+    db: db_dependency,
+    complete: Optional[bool] = Query(None, description="완료 여부 필터 (true 또는 false)"),
+    category_id: Optional[int] = Query(None, description="카테고리 ID 필터"),
 ):
     """전체 todo 목록을 반환합니다."""
     if user is None:
@@ -51,12 +52,19 @@ async def read_all(
 
 
 @router.get("/todo/{todo_id}", status_code=status.HTTP_200_OK)
-async def read_todo(user: user_dependency, db: db_dependency, todo_id: int = Path(gt=0)):
+async def read_todo(
+    user: user_dependency, db: db_dependency, todo_id: int = Path(gt=0)
+):
     """id에 해당하는 todo를 반환합니다."""
     if user is None:
         raise HTTPException(status_code=401, detail="Authentication Failed")
 
-    todo_model = db.query(Todos).filter(Todos.id == todo_id).filter(Todos.owner_id == user.get("id")).first()
+    todo_model = (
+        db.query(Todos)
+        .filter(Todos.id == todo_id)
+        .filter(Todos.owner_id == user.get("id"))
+        .first()
+    )
 
     if todo_model:
         return todo_model
@@ -64,7 +72,9 @@ async def read_todo(user: user_dependency, db: db_dependency, todo_id: int = Pat
 
 
 @router.post("/todo", status_code=status.HTTP_201_CREATED)
-async def create_todo(user: user_dependency, db: db_dependency, todo_request: TodoRequest):
+async def create_todo(
+    user: user_dependency, db: db_dependency, todo_request: TodoRequest
+):
     """새로운 todo를 생성합니다."""
     if user is None:
         raise HTTPException(status_code=401, detail="Authentication Failed")
@@ -74,11 +84,21 @@ async def create_todo(user: user_dependency, db: db_dependency, todo_request: To
 
 
 @router.put("/todo/{todo_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def update_todo(user: user_dependency, db: db_dependency, todo_request: TodoRequest, todo_id: int = Path(gt=0)):
+async def update_todo(
+    user: user_dependency,
+    db: db_dependency,
+    todo_request: TodoRequest,
+    todo_id: int = Path(gt=0),
+):
     if user is None:
         raise HTTPException(status_code=401, detail="Authentication Failed")
 
-    todo_model = db.query(Todos).filter(Todos.id == todo_id).filter(Todos.owner_id == user.get("id")).first()
+    todo_model = (
+        db.query(Todos)
+        .filter(Todos.id == todo_id)
+        .filter(Todos.owner_id == user.get("id"))
+        .first()
+    )
 
     if todo_model is None:
         raise HTTPException(status_code=404, detail="Todo not found")
@@ -88,16 +108,28 @@ async def update_todo(user: user_dependency, db: db_dependency, todo_request: To
     todo_model.priority = todo_request.priority
     todo_model.complete = todo_request.complete
 
+    if todo_request.complete and not todo_model.completed_at:
+        todo_model.completed_at = datetime.now()
+    elif not todo_request.complete:
+        todo_model.completed_at = None
+
     db.add(todo_model)
     db.commit()
 
 
 @router.delete("/todo/{todo_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_todo(user: user_dependency, db: db_dependency, todo_id: int = Path(gt=0)):
+async def delete_todo(
+    user: user_dependency, db: db_dependency, todo_id: int = Path(gt=0)
+):
     if user is None:
         raise HTTPException(status_code=401, detail="Authentication Failed")
 
-    todo_model = db.query(Todos).filter(Todos.id == todo_id).filter(Todos.owner_id == user.get("id")).first()
+    todo_model = (
+        db.query(Todos)
+        .filter(Todos.id == todo_id)
+        .filter(Todos.owner_id == user.get("id"))
+        .first()
+    )
 
     if todo_model is None:
         raise HTTPException(status_code=404, detail="Todo not found")
