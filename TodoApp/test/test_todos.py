@@ -64,6 +64,101 @@ def test_read_all_authenticated_with_complete(test_todos):
     assert response.json() == expected
 
 
+def test_read_todos_with_filter(test_todos_with_filter):
+    response = client.get("/?search=Learn")
+    searched_todos = [
+        {
+            "id": todo.id,
+            "title": todo.title,
+            "description": todo.description,
+            "priority": todo.priority,
+            "complete": todo.complete,
+            "owner_id": todo.owner_id,
+            "category_id": todo.category_id,
+            "completed_at": todo.completed_at.isoformat()
+            if todo.completed_at
+            else None,
+        }
+        for todo in test_todos_with_filter
+        if "Learn" in todo.title
+    ]
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json() == searched_todos
+
+    response = client.get("/?sort=priority")
+    sorted_todos = sorted(test_todos_with_filter, key=lambda x: x.priority)
+    sorted_todos = [
+        {
+            "id": todo.id,
+            "title": todo.title,
+            "description": todo.description,
+            "priority": todo.priority,
+            "complete": todo.complete,
+            "owner_id": todo.owner_id,
+            "category_id": todo.category_id,
+            "completed_at": todo.completed_at.isoformat()
+            if todo.completed_at
+            else None,
+        }
+        for todo in sorted_todos
+    ]
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json() == sorted_todos
+
+    response = client.get("/?sort=-priority")
+    sorted_todos = sorted(
+        test_todos_with_filter, key=lambda x: x.priority, reverse=True
+    )
+    sorted_todos = [
+        {
+            "id": todo.id,
+            "title": todo.title,
+            "description": todo.description,
+            "priority": todo.priority,
+            "complete": todo.complete,
+            "owner_id": todo.owner_id,
+            "category_id": todo.category_id,
+            "completed_at": todo.completed_at.isoformat()
+            if todo.completed_at
+            else None,
+        }
+        for todo in sorted_todos
+    ]
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json() == sorted_todos
+
+    response = client.get("/?search=Todo&sort=-priority")
+    filtered_todos = [todo for todo in test_todos_with_filter if "Todo" in todo.title]
+    sorted_todos = sorted(filtered_todos, key=lambda x: x.priority, reverse=True)
+    sorted_todos = [
+        {
+            "id": todo.id,
+            "title": todo.title,
+            "description": todo.description,
+            "priority": todo.priority,
+            "complete": todo.complete,
+            "owner_id": todo.owner_id,
+            "category_id": todo.category_id,
+            "completed_at": todo.completed_at.isoformat()
+            if todo.completed_at
+            else None,
+        }
+        for todo in sorted_todos
+    ]
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json() == sorted_todos
+
+
+def test_read_todos_with_filter_not_found(test_todos_with_filter):
+    response = client.get("/?search=NonExistentTodo")
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json() == []
+
+    response = client.get("/?sort=nonexistent_field")
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.json() == {"detail": "Invalid sort field: nonexistent_field"}
+
+
 def test_read_one_authenticated(test_todo):
     response = client.get(f"/todo/{test_todo.id}")
     assert response.status_code == status.HTTP_200_OK
