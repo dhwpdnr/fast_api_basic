@@ -1,13 +1,17 @@
-from fastapi import APIRouter, Depends, HTTPException, Path, Query
+from fastapi import APIRouter, Depends, HTTPException, Path, Query, Request
 from TodoApp.models import Todos
 from TodoApp.database import SessionLocal
-from typing import Annotated, Optional, Literal
+from typing import Annotated, Optional
+from math import ceil
 from sqlalchemy.orm import Session
-from sqlalchemy import or_, asc, desc
+from sqlalchemy import or_, asc, desc, func
 from starlette import status
 from pydantic import BaseModel, Field
 from datetime import datetime
 from .auth import get_current_user
+from ..schemas.todos import TodoResponse
+from ..schemas.pagination import PaginatedResponse
+from ..utils.pagination import paginate
 
 router = APIRouter()
 
@@ -33,7 +37,9 @@ class TodoRequest(BaseModel):
 
 
 @router.get("/")
+@paginate(TodoResponse)
 async def read_all(
+    request: Request,  # pagination을 위한 request
     user: user_dependency,
     db: db_dependency,
     complete: Optional[bool] = Query(None, description="완료 여부 필터 (true 또는 false)"),
@@ -75,7 +81,7 @@ async def read_all(
                 status_code=400, detail=f"Invalid sort field: {sort_field}"
             )
 
-    return query.all()
+    return query
 
 
 @router.get("/todo/{todo_id}", status_code=status.HTTP_200_OK)

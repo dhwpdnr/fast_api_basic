@@ -10,7 +10,8 @@ def test_read_all_authenticated(test_todo):
     response = client.get("/")
     assert response.status_code == status.HTTP_200_OK
     # test_todo 값 사용
-    assert response.json() == [
+    print(response.json())
+    assert response.json()["data"] == [
         {
             "id": test_todo.id,
             "title": test_todo.title,
@@ -42,7 +43,7 @@ def test_read_all_authenticated_with_complete(test_todos):
     ]
     assert response.status_code == status.HTTP_200_OK
 
-    assert response.json() == expected
+    assert response.json()["data"] == expected
 
     response = client.get("/?complete=False")
     expected = [
@@ -61,7 +62,7 @@ def test_read_all_authenticated_with_complete(test_todos):
     ]
 
     assert response.status_code == status.HTTP_200_OK
-    assert response.json() == expected
+    assert response.json()["data"] == expected
 
 
 def test_read_todos_with_filter(test_todos_with_filter):
@@ -83,7 +84,7 @@ def test_read_todos_with_filter(test_todos_with_filter):
         if "Learn" in todo.title
     ]
     assert response.status_code == status.HTTP_200_OK
-    assert response.json() == searched_todos
+    assert response.json()["data"] == searched_todos
 
     response = client.get("/?sort=priority")
     sorted_todos = sorted(test_todos_with_filter, key=lambda x: x.priority)
@@ -103,7 +104,7 @@ def test_read_todos_with_filter(test_todos_with_filter):
         for todo in sorted_todos
     ]
     assert response.status_code == status.HTTP_200_OK
-    assert response.json() == sorted_todos
+    assert response.json()["data"] == sorted_todos
 
     response = client.get("/?sort=-priority")
     sorted_todos = sorted(
@@ -125,7 +126,7 @@ def test_read_todos_with_filter(test_todos_with_filter):
         for todo in sorted_todos
     ]
     assert response.status_code == status.HTTP_200_OK
-    assert response.json() == sorted_todos
+    assert response.json()["data"] == sorted_todos
 
     response = client.get("/?search=Todo&sort=-priority")
     filtered_todos = [todo for todo in test_todos_with_filter if "Todo" in todo.title]
@@ -146,13 +147,13 @@ def test_read_todos_with_filter(test_todos_with_filter):
         for todo in sorted_todos
     ]
     assert response.status_code == status.HTTP_200_OK
-    assert response.json() == sorted_todos
+    assert response.json()["data"] == sorted_todos
 
 
 def test_read_todos_with_filter_not_found(test_todos_with_filter):
     response = client.get("/?search=NonExistentTodo")
     assert response.status_code == status.HTTP_200_OK
-    assert response.json() == []
+    assert response.json()["data"] == []
 
     response = client.get("/?sort=nonexistent_field")
     assert response.status_code == status.HTTP_400_BAD_REQUEST
