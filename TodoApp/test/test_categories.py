@@ -8,15 +8,13 @@ app.dependency_overrides[get_db] = override_get_db
 def test_read_all_category(test_category):
     response = client.get("/categories/")
     assert response.status_code == status.HTTP_200_OK
-    assert response.json() == [
+    assert response.json()["data"] == [
         {"id": test_category.id, "name": test_category.name}
     ]
 
 
 def test_create_category(test_category):
-    request_data = {
-        "name": "New Category"
-    }
+    request_data = {"name": "New Category"}
 
     response = client.post("/categories/", json=request_data)
     assert response.status_code == status.HTTP_201_CREATED
@@ -28,9 +26,7 @@ def test_create_category(test_category):
 
 
 def test_create_category_already_exists(test_category):
-    request_data = {
-        "name": test_category.name
-    }
+    request_data = {"name": test_category.name}
 
     response = client.post("/categories/", json=request_data)
     assert response.status_code == status.HTTP_400_BAD_REQUEST

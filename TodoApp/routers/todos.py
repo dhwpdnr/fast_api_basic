@@ -2,18 +2,21 @@ from fastapi import APIRouter, Depends, HTTPException, Path, Query, Request
 from TodoApp.models import Todos
 from TodoApp.database import SessionLocal
 from typing import Annotated, Optional
-from math import ceil
 from sqlalchemy.orm import Session
-from sqlalchemy import or_, asc, desc, func
+from sqlalchemy import or_, asc, desc
 from starlette import status
 from pydantic import BaseModel, Field
 from datetime import datetime
 from .auth import get_current_user
 from ..schemas.todos import TodoResponse
 from ..schemas.pagination import PaginatedResponse
+from ..schemas.error import ErrorResponse
 from ..utils.pagination import paginate
 
-router = APIRouter()
+router = APIRouter(
+    prefix="/todo",
+    tags=["todos"],
+)
 
 
 def get_db():
@@ -36,7 +39,22 @@ class TodoRequest(BaseModel):
     category_id: Optional[int] = None
 
 
-@router.get("/")
+@router.get(
+    "",
+    response_model=PaginatedResponse[TodoResponse],
+    status_code=status.HTTP_200_OK,
+    description="유저의 전체 todo 목록을 반환합니다.",
+    responses={
+        401: {
+            "description": "Authentication Failed",
+            "model": ErrorResponse,
+        },
+        404: {
+            "description": "Invalid sort field: {sort_field}",
+            "model": ErrorResponse,
+        },
+    },
+)
 @paginate(TodoResponse)
 async def read_all(
     request: Request,  # pagination을 위한 request
@@ -44,7 +62,7 @@ async def read_all(
     db: db_dependency,
     complete: Optional[bool] = Query(None, description="완료 여부 필터 (true 또는 false)"),
     category_id: Optional[int] = Query(None, description="카테고리 ID 필터"),
-    search: Optional[str] = Query(None),
+    search: Optional[str] = Query(None, description="검색어 (제목에 포함된 단어)"),
     sort: Optional[str] = Query(None, description="정렬 기준 (예: priority, -priority)"),
 ):
     """전체 todo 목록을 반환합니다."""
@@ -84,7 +102,21 @@ async def read_all(
     return query
 
 
-@router.get("/todo/{todo_id}", status_code=status.HTTP_200_OK)
+@router.get(
+    "/{todo_id}",
+    status_code=status.HTTP_200_OK,
+    response_model=TodoResponse,
+    responses={
+        401: {
+            "description": "Authentication Failed",
+            "model": ErrorResponse,
+        },
+        404: {
+            "description": "Todo not found",
+            "model": ErrorResponse,
+        },
+    },
+)
 async def read_todo(
     user: user_dependency, db: db_dependency, todo_id: int = Path(gt=0)
 ):
@@ -104,7 +136,17 @@ async def read_todo(
     raise HTTPException(status_code=404, detail="Todo not found")
 
 
-@router.post("/todo", status_code=status.HTTP_201_CREATED)
+@router.post(
+    "",
+    status_code=status.HTTP_201_CREATED,
+    response_model=None,
+    responses={
+        401: {
+            "description": "Authentication Failed",
+            "model": ErrorResponse,
+        },
+    },
+)
 async def create_todo(
     user: user_dependency, db: db_dependency, todo_request: TodoRequest
 ):
@@ -116,7 +158,21 @@ async def create_todo(
     db.commit()
 
 
-@router.put("/todo/{todo_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.put(
+    "/{todo_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    response_model=None,
+    responses={
+        401: {
+            "description": "Authentication Failed",
+            "model": ErrorResponse,
+        },
+        404: {
+            "description": "Todo not found",
+            "model": ErrorResponse,
+        },
+    },
+)
 async def update_todo(
     user: user_dependency,
     db: db_dependency,
@@ -150,7 +206,21 @@ async def update_todo(
     db.commit()
 
 
-@router.delete("/todo/{todo_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete(
+    "/{todo_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    response_model=None,
+    responses={
+        401: {
+            "description": "Authentication Failed",
+            "model": ErrorResponse,
+        },
+        404: {
+            "description": "Todo not found",
+            "model": ErrorResponse,
+        },
+    },
+)
 async def delete_todo(
     user: user_dependency, db: db_dependency, todo_id: int = Path(gt=0)
 ):

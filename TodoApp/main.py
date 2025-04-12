@@ -3,7 +3,13 @@ from .models import Base
 from .database import engine
 from .routers import auth, todos, admin, users, categories
 
-app = FastAPI()
+app = FastAPI(
+    title="My Todo API",
+    description="This API manages TODO items with filtering, completion, and pagination.",
+    version="1.0.0",
+    contact={"name": "ook2 Developer", "email": "dhwpdnr21@kakao.com"},
+    license_info={"name": "MIT", "url": "https://opensource.org/licenses/MIT"},
+)
 
 Base.metadata.create_all(bind=engine)
 

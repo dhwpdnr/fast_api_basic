@@ -7,11 +7,10 @@ from starlette import status
 from pydantic import BaseModel, Field
 from .auth import get_current_user
 from passlib.context import CryptContext
+from ..schemas.users import UserResponse
+from ..schemas.error import ErrorResponse
 
-router = APIRouter(
-    prefix="/user",
-    tags=["user"]
-)
+router = APIRouter(prefix="/user", tags=["user"])
 
 
 def get_db():
@@ -32,7 +31,14 @@ class UserVerification(BaseModel):
     new_password: str = Field(min_length=6)
 
 
-@router.get("/", status_code=status.HTTP_200_OK)
+@router.get(
+    "/",
+    status_code=status.HTTP_200_OK,
+    response_model=UserResponse,
+    responses={
+        401: {"description": "Authentication Failed", "model": ErrorResponse},
+    },
+)
 async def get_user(user: user_dependency, db: db_dependency):
     """사용자 정보를 반환합니다."""
     if user is None:
@@ -41,15 +47,28 @@ async def get_user(user: user_dependency, db: db_dependency):
     return db.query(Users).filter(Users.id == user.get("id")).first()
 
 
-@router.put("/password", status_code=status.HTTP_204_NO_CONTENT)
-async def change_password(user: user_dependency, db: db_dependency, user_verification: UserVerification):
+@router.put(
+    "/password",
+    status_code=status.HTTP_204_NO_CONTENT,
+    responses={
+        401: {
+            "description": "Unauthorized: Either not logged in or password verification failed",
+            "model": ErrorResponse,
+        },
+    },
+)
+async def change_password(
+    user: user_dependency, db: db_dependency, user_verification: UserVerification
+):
     """사용자 비밀번호를 변경합니다."""
     if user is None:
         raise HTTPException(status_code=401, detail="Authentication Failed")
 
     user_model = db.query(Users).filter(Users.id == user.get("id")).first()
 
-    if not bcrypt_context.verify(user_verification.password, user_model.hashed_password):
+    if not bcrypt_context.verify(
+        user_verification.password, user_model.hashed_password
+    ):
         raise HTTPException(status_code=401, detail="Error on password verification")
 
     user_model.hashed_password = bcrypt_context.hash(user_verification.new_password)
@@ -57,8 +76,16 @@ async def change_password(user: user_dependency, db: db_dependency, user_verific
     db.commit()
 
 
-@router.put("/phonenumver/{phone_number}", status_code=status.HTTP_204_NO_CONTENT)
-async def change_phone_number(user: user_dependency, db: db_dependency, phone_number: str):
+@router.put(
+    "/phonenumver/{phone_number}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    responses={
+        401: {"description": "Authentication Failed", "model": ErrorResponse},
+    },
+)
+async def change_phone_number(
+    user: user_dependency, db: db_dependency, phone_number: str
+):
     """사용자 전화번호를 변경합니다."""
     if user is None:
         raise HTTPException(status_code=401, detail="Authentication Failed")

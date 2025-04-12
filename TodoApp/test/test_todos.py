@@ -7,7 +7,7 @@ app.dependency_overrides[get_current_user] = override_get_current_user
 
 
 def test_read_all_authenticated(test_todo):
-    response = client.get("/")
+    response = client.get("/todo")
     assert response.status_code == status.HTTP_200_OK
     # test_todo 값 사용
     print(response.json())
@@ -26,7 +26,7 @@ def test_read_all_authenticated(test_todo):
 
 
 def test_read_all_authenticated_with_complete(test_todos):
-    response = client.get("/?complete=True")
+    response = client.get("/todo?complete=True")
     expected = [
         {
             "id": todo.id,
@@ -45,7 +45,7 @@ def test_read_all_authenticated_with_complete(test_todos):
 
     assert response.json()["data"] == expected
 
-    response = client.get("/?complete=False")
+    response = client.get("/todo?complete=False")
     expected = [
         {
             "id": todo.id,
@@ -66,7 +66,7 @@ def test_read_all_authenticated_with_complete(test_todos):
 
 
 def test_read_todos_with_filter(test_todos_with_filter):
-    response = client.get("/?search=Learn")
+    response = client.get("/todo?search=Learn")
     searched_todos = [
         {
             "id": todo.id,
@@ -86,7 +86,7 @@ def test_read_todos_with_filter(test_todos_with_filter):
     assert response.status_code == status.HTTP_200_OK
     assert response.json()["data"] == searched_todos
 
-    response = client.get("/?sort=priority")
+    response = client.get("/todo?sort=priority")
     sorted_todos = sorted(test_todos_with_filter, key=lambda x: x.priority)
     sorted_todos = [
         {
@@ -106,7 +106,7 @@ def test_read_todos_with_filter(test_todos_with_filter):
     assert response.status_code == status.HTTP_200_OK
     assert response.json()["data"] == sorted_todos
 
-    response = client.get("/?sort=-priority")
+    response = client.get("/todo?sort=-priority")
     sorted_todos = sorted(
         test_todos_with_filter, key=lambda x: x.priority, reverse=True
     )
@@ -128,7 +128,7 @@ def test_read_todos_with_filter(test_todos_with_filter):
     assert response.status_code == status.HTTP_200_OK
     assert response.json()["data"] == sorted_todos
 
-    response = client.get("/?search=Todo&sort=-priority")
+    response = client.get("/todo?search=Todo&sort=-priority")
     filtered_todos = [todo for todo in test_todos_with_filter if "Todo" in todo.title]
     sorted_todos = sorted(filtered_todos, key=lambda x: x.priority, reverse=True)
     sorted_todos = [
@@ -151,11 +151,11 @@ def test_read_todos_with_filter(test_todos_with_filter):
 
 
 def test_read_todos_with_filter_not_found(test_todos_with_filter):
-    response = client.get("/?search=NonExistentTodo")
+    response = client.get("/todo?search=NonExistentTodo")
     assert response.status_code == status.HTTP_200_OK
     assert response.json()["data"] == []
 
-    response = client.get("/?sort=nonexistent_field")
+    response = client.get("/todo?sort=nonexistent_field")
     assert response.status_code == status.HTTP_400_BAD_REQUEST
     assert response.json() == {"detail": "Invalid sort field: nonexistent_field"}
 
