@@ -1,28 +1,15 @@
-from fastapi import APIRouter, Depends, HTTPException, Path
+from fastapi import APIRouter, HTTPException
 from ..models import Users
-from ..database import SessionLocal
-from typing import Annotated
-from sqlalchemy.orm import Session
 from starlette import status
 from pydantic import BaseModel, Field
-from .auth import get_current_user
 from passlib.context import CryptContext
 from ..schemas.users import UserResponse
 from ..schemas.error import ErrorResponse
+from ..dependencies.db import db_dependency
+from ..dependencies.auth import user_dependency
 
 router = APIRouter(prefix="/user", tags=["user"])
 
-
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
-
-
-db_dependency = Annotated[Session, Depends(get_db)]
-user_dependency = Annotated[dict, Depends(get_current_user)]
 bcrypt_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 

@@ -1,8 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
-from pydantic import BaseModel
-from sqlalchemy.orm import Session
-from TodoApp.database import SessionLocal
 from typing import Annotated
+from pydantic import BaseModel
 from TodoApp.models import Users
 from starlette import status
 from passlib.context import CryptContext
@@ -10,6 +8,7 @@ from fastapi.security import OAuth2PasswordRequestForm, OAuth2PasswordBearer
 from jose import jwt, JWTError
 from datetime import timedelta, datetime
 from ..schemas.error import ErrorResponse
+from ..dependencies.db import db_dependency
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -33,17 +32,6 @@ class CreateUserRequest(BaseModel):
 class Token(BaseModel):
     access_token: str
     token_type: str
-
-
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
-
-
-db_dependency = Annotated[Session, Depends(get_db)]
 
 
 def authenticate_user(username: str, password: str, db):

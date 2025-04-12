@@ -1,5 +1,6 @@
 from .utils import *
-from ..routers.admin import get_db, get_current_user
+from ..dependencies.db import get_db
+from ..dependencies.auth import get_current_user
 from fastapi import status
 from ..models import Todos
 
@@ -11,8 +12,17 @@ def test_admin_read_all_authenticated(test_todo):
     response = client.get("/admin/todo")
     assert response.status_code == status.HTTP_200_OK
     assert response.json() == [
-        {"id": 1, "title": "Learn to code", "description": "Test Description", "priority": 5, "complete": False,
-         "owner_id": 1}]
+        {
+            "id": 1,
+            "title": "Learn to code",
+            "description": "Test Description",
+            "priority": 5,
+            "complete": False,
+            "owner_id": 1,
+            "category_id": 1,
+            "completed_at": None,
+        }
+    ]
 
 
 def test_admin_delete_todo(test_todo):
@@ -28,5 +38,3 @@ def test_admin_delete_todo_not_found(test_todo):
     response = client.delete("/admin/todo/999")
     assert response.status_code == status.HTTP_404_NOT_FOUND
     assert response.json() == {"detail": "Todo not found"}
-
-

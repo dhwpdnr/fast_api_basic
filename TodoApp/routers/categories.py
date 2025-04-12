@@ -1,27 +1,14 @@
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel
-from sqlalchemy.orm import Session
-from TodoApp.database import SessionLocal
 from TodoApp.models import Category
-from typing import Annotated
 from starlette import status
 from ..utils.pagination import paginate
 from ..schemas.error import ErrorResponse
 from ..schemas.categories import CategoryResponse
 from ..schemas.pagination import PaginatedResponse
+from ..dependencies.db import db_dependency
 
 router = APIRouter(prefix="/categories", tags=["Categories"])
-
-
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
-
-
-db_dependency = Annotated[Session, Depends(get_db)]
 
 
 class CategoryRequest(BaseModel):

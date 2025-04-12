@@ -1,5 +1,12 @@
 from .utils import *
-from ..routers.auth import get_db, authenticate_user, create_access_token, SECRET_KEY, ALGORITHM, get_current_user
+from ..routers.auth import (
+    authenticate_user,
+    create_access_token,
+    SECRET_KEY,
+    ALGORITHM,
+    get_current_user,
+)
+from ..dependencies.db import get_db
 from jose import jwt
 from datetime import timedelta
 import pytest
@@ -30,7 +37,9 @@ def test_create_access_token():
 
     token = create_access_token(username, user_id, role, expires_delta)
 
-    decoded_token = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM], options={"verify_signature": False})
+    decoded_token = jwt.decode(
+        token, SECRET_KEY, algorithms=[ALGORITHM], options={"verify_signature": False}
+    )
 
     assert decoded_token["sub"] == username
     assert decoded_token["id"] == user_id

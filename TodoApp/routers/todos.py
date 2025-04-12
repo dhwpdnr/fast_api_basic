@@ -1,34 +1,21 @@
 from fastapi import APIRouter, Depends, HTTPException, Path, Query, Request
 from TodoApp.models import Todos
-from TodoApp.database import SessionLocal
 from typing import Annotated, Optional
-from sqlalchemy.orm import Session
 from sqlalchemy import or_, asc, desc
 from starlette import status
 from pydantic import BaseModel, Field
 from datetime import datetime
-from .auth import get_current_user
 from ..schemas.todos import TodoResponse
 from ..schemas.pagination import PaginatedResponse
 from ..schemas.error import ErrorResponse
 from ..utils.pagination import paginate
+from ..dependencies.db import db_dependency
+from ..dependencies.auth import user_dependency
 
 router = APIRouter(
     prefix="/todo",
     tags=["todos"],
 )
-
-
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
-
-
-db_dependency = Annotated[Session, Depends(get_db)]
-user_dependency = Annotated[dict, Depends(get_current_user)]
 
 
 class TodoRequest(BaseModel):

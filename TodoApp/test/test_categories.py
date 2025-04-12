@@ -1,4 +1,4 @@
-from ..routers.categories import get_db
+from ..dependencies.db import get_db
 from fastapi import status
 from .utils import *
 
