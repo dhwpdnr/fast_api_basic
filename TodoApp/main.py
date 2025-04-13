@@ -1,7 +1,13 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from .models import Base
 from .database import engine
 from .routers import auth, todos, admin, users, categories
+import logging
+from .logging_config import LOGGING_CONFIG, dictConfig
+import time
+
+dictConfig(LOGGING_CONFIG)
+logger = logging.getLogger(__name__)
 
 app = FastAPI(
     title="My Todo API",
@@ -10,6 +16,23 @@ app = FastAPI(
     contact={"name": "ook2 Developer", "email": "dhwpdnr21@kakao.com"},
     license_info={"name": "MIT", "url": "https://opensource.org/licenses/MIT"},
 )
+
+
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    logger.info(f"Request: {request.method} {request.url}")
+
+    start_time = time.time()
+    try:
+        response = await call_next(request)
+    except Exception as e:
+        logger.exception(f"Exception while handling request: {e}")
+        raise
+
+    process_time = time.time() - start_time
+    logger.info(f"Response status: {response.status_code} in {process_time:.2f}s")
+    return response
+
 
 Base.metadata.create_all(bind=engine)
 
