@@ -5,6 +5,7 @@ from .routers import auth, todos, admin, users, categories
 import logging
 from .logging_config import LOGGING_CONFIG, dictConfig
 import time
+from .middleware import TimerMiddleware
 
 dictConfig(LOGGING_CONFIG)
 logger = logging.getLogger(__name__)
@@ -16,6 +17,8 @@ app = FastAPI(
     contact={"name": "ook2 Developer", "email": "dhwpdnr21@kakao.com"},
     license_info={"name": "MIT", "url": "https://opensource.org/licenses/MIT"},
 )
+
+app.add_middleware(TimerMiddleware)
 
 
 @app.middleware("http")
