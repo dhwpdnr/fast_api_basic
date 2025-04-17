@@ -1,9 +1,9 @@
-from fastapi import APIRouter, Depends, HTTPException, Path, Query, Request
+from fastapi import APIRouter, HTTPException, Path, Query, Request
 from TodoApp.models import Todos
-from typing import Annotated, Optional
+from typing import Optional
 from sqlalchemy import or_, asc, desc
 from starlette import status
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, validator
 from datetime import datetime
 from ..schemas.todos import TodoResponse
 from ..schemas.pagination import PaginatedResponse
@@ -22,8 +22,27 @@ class TodoRequest(BaseModel):
     title: str = Field(min_length=3)
     description: str = Field(min_length=3, max_length=100)
     priority: int = Field(gt=0, lt=6)
-    complete: bool
+    complete: bool = Field(default=False)
     category_id: Optional[int] = None
+
+    @validator("title")
+    def title_not_blank(cls, v):
+        if not v.strip():
+            raise ValueError("제목은 공백만으로 이뤄질 수 없습니다.")
+        return v
+
+    @validator("description")
+    def description_min_length(cls, v):
+        if v and len(v.strip()) < 10:
+            raise ValueError("설명은 최소 10자 이상이어야 합니다.")
+        return v
+
+    @validator("category")
+    def validate_category(cls, v):
+        valid_categories = {"work", "personal", "study", "health"}
+        if v and v not in valid_categories:
+            raise ValueError(f"'{v}'는 유효하지 않은 카테고리입니다. 가능한 값: {valid_categories}")
+        return v
 
 
 @router.get(
